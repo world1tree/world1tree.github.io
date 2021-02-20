@@ -1,6 +1,6 @@
 baseURL = "https://world1tree.github.io/"
 languageCode = "en-us"
-title = "Archie"
+title = "World1tree"
 theme="archie"
 copyright = "© Athul"
 # Code Highlight
@@ -13,43 +13,28 @@ paginate=3 # articles per page
 [params]
     mode="auto" # color-mode → light,dark or auto
     useCDN=false # don't use CDNs for fonts and icons, instead serve them locally.
-    subtitle = "Minimal and Clean [blog theme for Hugo](https://github.com/athul/archie)"
+    subtitle = "*Start where you are. Use what you have. Do what you can!* ~[*Arthur Ashe*](https://en.wikipedia.org/wiki/Arthur_Ashe)"
 
 # Social Tags
 
 [[params.social]]
 name = "GitHub"
 icon = "github"
-url = "https://github.com/athul/archie"
-
-[[params.social]]
-name = "Twitter"
-icon = "twitter"
-url = "https://twitter.com/athulcajay/"
+url = "https://github.com/world1tree"
 
 [[params.social]]
 name = "GitLab"
 icon = "gitlab"
-url = "https://gitlab.com/athul/"
+url = "https://gitlab.com/world1tree/"
 
 # Main menu Items
 
 [[menu.main]]
-name = "Home"
-url = "/"
-weight = 1
-
-[[menu.main]]
-name = "All posts"
+name = "Archives"
 url = "/posts"
-weight = 2
-
-[[menu.main]]
-name = "About"
-url = "/about"
-weight = 3
+weight = 1
 
 [[menu.main]]
 name = "Tags"
 url = "/tags"
-weight = 4
+weight = 2
