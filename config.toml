@@ -1,4 +1,4 @@
-baseURL = "https://world1tree.github.io"
+baseURL = "https://world1tree.github.io/"
 languageCode = "en-us"
 title = "Archie"
 theme="archie"
