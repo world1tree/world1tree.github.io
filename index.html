@@ -163,8 +163,9 @@
     <script>
         const inputText = document.getElementById('inputText');
         const highlightedText = document.getElementById('highlightedText');
-        const resultTable = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+        const resultTable = document.getElementById('resultTable');
 
+        // 中文数字映射
         const chineseNumbers = {
             '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
             '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
@@ -190,130 +191,114 @@
         };
 
         const numberPattern = Object.keys(chineseNumbers).join('|');
-        const countPattern = `(?:${numberPattern}|\\d+)`;
 
         function processText(text) {
+            const arabicPattern = '(?:[1-9]|[1-9]\\d|100)';
+            const fullNumberPattern = `(?:${numberPattern}|${arabicPattern})`;
+            
+            const lines = text.split('\n');
+            let processed = lines.map(line => {
+                const countDescPattern = new RegExp(`(${fullNumberPattern})单(?:(?:${fullNumberPattern})组)?|(${fullNumberPattern})组`, 'g');
+                return processLine(line, countDescPattern);
+            }).join('\n');
+            
+            return processed;
+        }
+
+        function processLine(line, countDescPattern) {
+            // 查找所有计数描述
+            const countMatches = [...line.matchAll(countDescPattern)];
             const highlights = [];
             
-            // 按行分割文本
-            const lines = text.split('\n');
+            countMatches.forEach(match => {
+                const countDesc = match[0];
+                const countIndex = match.index;
+                
+                highlights.push({
+                    start: countIndex,
+                    end: countIndex + countDesc.length,
+                    text: countDesc,
+                    type: 'count'
+                });
+
+                // 获取这个计数描述之前的文本
+                const textBefore = line.substring(0, countIndex);
+                
+                // 查找所有三位数字
+                const numbers = [...textBefore.matchAll(/\d{3}/g)];
+                numbers.forEach(numMatch => {
+                    const numStart = numMatch.index;
+                    const beforeChar = numStart > 0 ? textBefore[numStart - 1] : '';
+                    const afterChar = textBefore[numStart + 3] || '';
+                    
+                    if ((!beforeChar || /[，,\s.、+]/.test(beforeChar)) && 
+                        (!afterChar || /[，,\s.、+]/.test(afterChar))) {
+                        highlights.push({
+                            start: numStart,
+                            end: numStart + 3,
+                            text: numMatch[0],
+                            type: 'number'
+                        });
+                    }
+                });
+            });
+
+            highlights.sort((a, b) => a.start - b.start);
             
-            lines.forEach((line, lineIndex) => {
-                // 更新计数描述匹配模式，支持阿拉伯数字
-                const countDescPattern = new RegExp(`(${countPattern})单(?:(?:${countPattern})组)?|(${countPattern})组`);
-                const countMatch = line.match(countDescPattern);
-                
-                if (countMatch) {
-                    const countDesc = countMatch[0];
-                    const countStart = countMatch.index;
-                    
-                    // 添加计数描述到高亮列表
-                    const absoluteCountStart = line.indexOf(countDesc);
-                    highlights.push({
-                        start: absoluteCountStart,
-                        end: absoluteCountStart + countDesc.length,
-                        text: countDesc,
-                        type: 'count',
-                        line: line
-                    });
-                    
-                    // 获取从行首到计数描述之前的文本
-                    const beforeText = line.substring(0, countStart);
-                    
-                    // 查找所有三位数字，支持更多分隔符
-                    const numbers = [...beforeText.matchAll(/\d{3}/g)];
-                    numbers.forEach(numMatch => {
-                        const numStart = numMatch.index;
-                        const beforeChar = numStart > 0 ? beforeText[numStart - 1] : '';
-                        const afterChar = beforeText[numStart + 3] || '';
-                        
-                        // 更新分隔符检查，添加+号
-                        if ((!beforeChar || /[，,\s.、+]/.test(beforeChar)) && 
-                            (!afterChar || /[，,\s.、+]/.test(afterChar))) {
-                            highlights.push({
-                                start: numStart,
-                                end: numStart + 3,
-                                text: numMatch[0],
-                                type: 'number',
-                                line: line
-                            });
-                        }
-                    });
-                }
-            });
-
-            // 处理每一行
-            let result = [];
-            lines.forEach(line => {
-                const lineHighlights = highlights.filter(h => h.line === line)
-                                              .sort((a, b) => a.start - b.start);
-                
-                let processedLine = line;
-                for (let i = lineHighlights.length - 1; i >= 0; i--) {
-                    const h = lineHighlights[i];
-                    const before = processedLine.substring(0, h.start);
-                    const after = processedLine.substring(h.end);
-                    const highlightClass = h.type === 'number' ? 'highlight-number' : 'highlight-count';
-                    processedLine = before + `<span class="${highlightClass}">${h.text}</span>` + after;
-                }
-                result.push(processedLine);
-            });
-
-            return result.join('\n');
+            let result = line;
+            for (let i = highlights.length - 1; i >= 0; i--) {
+                const h = highlights[i];
+                const before = result.substring(0, h.start);
+                const after = result.substring(h.end);
+                const highlightClass = h.type === 'number' ? 'highlight-number' : 'highlight-count';
+                result = before + `<span class="${highlightClass}">${h.text}</span>` + after;
+            }
+            
+            return result;
         }
 
         function updateStatistics() {
-            // 使用 Map 来保持插入顺序
             const numbers = new Map();
-            
-            // 获取完整的HTML内容并正确分割行
             const lines = highlightedText.innerHTML
                 .split(/<br\s*\/?>/i)
                 .filter(line => line.trim());
             
-            // 处理每一行
             lines.forEach((line, index) => {
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = line.trim();
                 
-                // 获取这一行的所有数字和计数
                 const numberSpans = tempDiv.querySelectorAll('.highlight-number');
                 const countSpan = tempDiv.querySelector('.highlight-count');
                 
                 if (!countSpan || !numberSpans.length) return;
                 
-                // 获取计数文本
                 const countText = countSpan.textContent;
+                const arabicPattern = '(?:[1-9]|[1-9]\\d|100)';
+                const fullNumberPattern = `(?:${numberPattern}|${arabicPattern})`;
                 
-                // 解析单数和组数
                 let singleCount = 0;
                 let groupCount = 0;
                 
-                // 匹配单数
-                const singleMatch = countText.match(new RegExp(`(${numberPattern}|\\d+)单`));
+                const singleMatch = countText.match(new RegExp(`(${fullNumberPattern})单`));
                 if (singleMatch) {
                     const count = singleMatch[1];
                     singleCount = chineseNumbers[count] || parseInt(count);
                 }
                 
-                // 匹配组数
-                const groupMatch = countText.match(new RegExp(`(${numberPattern}|\\d+)组`));
+                const groupMatch = countText.match(new RegExp(`(${fullNumberPattern})组`));
                 if (groupMatch) {
                     const count = groupMatch[1];
                     groupCount = chineseNumbers[count] || parseInt(count);
                 }
                 
-                // 获取这一行的数字并累加计数
                 Array.from(numberSpans).forEach(span => {
                     const num = span.textContent;
                     if (!numbers.has(num)) {
-                        // 第一次出现时初始化
                         numbers.set(num, {
                             single: singleCount,
                             group: groupCount
                         });
                     } else {
-                        // 已存在时累加单数和组数
                         const current = numbers.get(num);
                         numbers.set(num, {
                             single: current.single + singleCount,
@@ -323,7 +308,6 @@
                 });
             });
             
-            // 更新结果表格，保持数字出现的原始顺序
             resultTable.innerHTML = '';
             numbers.forEach((counts, number) => {
                 const row = resultTable.insertRow();
@@ -333,27 +317,40 @@
             });
         }
 
-        // 修改输入处理函数，确保正确插入换行符
+        // 输入事件监听
         inputText.addEventListener('input', () => {
             const processed = processText(inputText.value);
             highlightedText.innerHTML = processed.replace(/\n/g, '<br>');
             updateStatistics();
         });
 
-        // 添加清空功能
+        // 清空功能
         function clearInput() {
             inputText.value = '';
             highlightedText.innerHTML = '';
             resultTable.innerHTML = '';
         }
 
-        // 添加复制结果功能
+        // 修改复制结果功能
         function copyResults() {
             let resultText = '';
             const rows = resultTable.getElementsByTagName('tr');
+            
             for (let row of rows) {
                 const cells = row.getElementsByTagName('td');
-                resultText += `${cells[0].textContent}\t${cells[1].textContent}\t${cells[2].textContent}\n`;
+                const number = cells[0].textContent;
+                const single = cells[1].textContent;
+                const group = cells[2].textContent;
+                
+                // 格式化输出
+                let line = number;
+                if (single > 0) {
+                    line += ` ${single}单`;
+                }
+                if (group > 0) {
+                    line += `${group}组`;
+                }
+                resultText += line + '\n';
             }
             
             // 创建临时文本区域
