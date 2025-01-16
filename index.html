@@ -1,3 +1,382 @@
-<!doctype html><html><head><meta name=generator content="Hugo 0.80.0"><meta charset=utf-8><meta http-equiv=x-ua-compatible content="IE=edge"><title>World1tree | Home</title><meta name=viewport content="width=device-width,initial-scale=1"><meta property="og:image" content><link rel=alternate type=application/rss+xml href=https://world1tree.github.io/index.xml title=World1tree><meta property="og:title" content="World1tree"><meta property="og:description" content><meta property="og:type" content="website"><meta property="og:url" content="https://world1tree.github.io/"><meta property="og:updated_time" content="2021-02-20T22:13:54+08:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="World1tree"><meta name=twitter:description content><script src=https://world1tree.github.io/js/feather.min.js></script><link href=https://world1tree.github.io/css/fonts.css rel=stylesheet><link rel=stylesheet type=text/css media=screen href=https://world1tree.github.io/css/main.css><link rel=stylesheet type=text/css href=https://world1tree.github.io/css/dark.css media="(prefers-color-scheme: dark)"></head><body><div class=content><header><div class=main><a href=https://world1tree.github.io/>World1tree</a></div><nav><a href=/posts>Archives</a>
-<a href=/tags>Tags</a></nav></header><main class=list><div class=site-description><p><em>Start where you are. Use what you have. Do what you can!</em> ~<a href=https://en.wikipedia.org/wiki/Arthur_Ashe><em>Arthur Ashe</em></a></p></div><section class=list-item><h1 class=title><a href=/posts/page3/>Page3</a></h1><time>Feb 20, 2021</time><br><div class=description>&mldr;</div><a href=/posts/page3/>Read more ⟶</a></section><section class=list-item><h1 class=title><a href=/posts/page2/>Page2</a></h1><time>Feb 20, 2021</time><br><div class=description>&mldr;</div><a href=/posts/page2/>Read more ⟶</a></section><section class=list-item><h1 class=title><a href=/posts/page1/>Page1</a></h1><time>Feb 20, 2021</time><br><div class=description>&mldr;</div><a href=/posts/page1/>Read more ⟶</a></section></main><footer><hr><a class=soc href=https://github.com/world1tree title=GitHub><i data-feather=github></i></a>|<a class=soc href=https://gitlab.com/world1tree/ title=GitLab><i data-feather=gitlab></i></a>|⚡️
-2021 © Athul | <a href=https://github.com/athul/archie>Archie Theme</a> | Built with <a href=https://gohugo.io>Hugo</a></footer><script>feather.replace()</script></div></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>数字统计工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px; /* 移动端更友好的字体大小 */
+            box-sizing: border-box;
+        }
+
+        #highlightedText {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            user-select: none;
+            pointer-events: none;
+            background: #f9f9f9;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .highlight-number {
+            background-color: #ffeb3b;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .highlight-count {
+            background-color: #4caf50;
+            color: white;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f5f5f5;
+        }
+
+        /* 移动端优化 */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                gap: 10px;
+            }
+
+            textarea, #highlightedText {
+                font-size: 16px;
+                min-height: 80px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 6px;
+            }
+        }
+
+        /* 添加清除按钮 */
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            flex: 1;
+        }
+
+        button:active {
+            background-color: #45a049;
+        }
+
+        /* 添加说明文字 */
+        .instructions {
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="instructions">
+            <p>使用说明：</p>
+            <ul>
+                <li>在输入框中输入需要统计的数字和计数（如：489，357九单一组28）</li>
+                <li>支持1-100的中文数字和阿拉伯数字</li>
+                <li>支持逗号、空格、点、加号分隔数字</li>
+            </ul>
+        </div>
+        
+        <textarea id="inputText" placeholder="请在此输入文本..."></textarea>
+        <div id="highlightedText"></div>
+        
+        <div class="button-container">
+            <button onclick="clearInput()">清空输入</button>
+            <button onclick="copyResults()">复制结果</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>数字</th>
+                    <th>单数</th>
+                    <th>组数</th>
+                </tr>
+            </thead>
+            <tbody id="resultTable">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const inputText = document.getElementById('inputText');
+        const highlightedText = document.getElementById('highlightedText');
+        const resultTable = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+
+        const chineseNumbers = {
+            '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
+            '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+            '十一': 11, '十二': 12, '十三': 13, '十四': 14, '十五': 15,
+            '十六': 16, '十七': 17, '十八': 18, '十九': 19, '二十': 20,
+            '二十一': 21, '二十二': 22, '二十三': 23, '二十四': 24, '二十五': 25,
+            '二十六': 26, '二十七': 27, '二十八': 28, '二十九': 29, '三十': 30,
+            '三十一': 31, '三十二': 32, '三十三': 33, '三十四': 34, '三十五': 35,
+            '三十六': 36, '三十七': 37, '三十八': 38, '三十九': 39, '四十': 40,
+            '四十一': 41, '四十二': 42, '四十三': 43, '四十四': 44, '四十五': 45,
+            '四十六': 46, '四十七': 47, '四十八': 48, '四十九': 49, '五十': 50,
+            '五十一': 51, '五十二': 52, '五十三': 53, '五十四': 54, '五十五': 55,
+            '五十六': 56, '五十七': 57, '五十八': 58, '五十九': 59, '六十': 60,
+            '六十一': 61, '六十二': 62, '六十三': 63, '六十四': 64, '六十五': 65,
+            '六十六': 66, '六十七': 67, '六十八': 68, '六十九': 69, '七十': 70,
+            '七十一': 71, '七十二': 72, '七十三': 73, '七十四': 74, '七十五': 75,
+            '七十六': 76, '七十七': 77, '七十八': 78, '七十九': 79, '八十': 80,
+            '八十一': 81, '八十二': 82, '八十三': 83, '八十四': 84, '八十五': 85,
+            '八十六': 86, '八十七': 87, '八十八': 88, '八十九': 89, '九十': 90,
+            '九十一': 91, '九十二': 92, '九十三': 93, '九十四': 94, '九十五': 95,
+            '九十六': 96, '九十七': 97, '九十八': 98, '九十九': 99, '一百': 100,
+            '两': 2
+        };
+
+        const numberPattern = Object.keys(chineseNumbers).join('|');
+        const countPattern = `(?:${numberPattern}|\\d+)`;
+
+        function processText(text) {
+            const highlights = [];
+            
+            // 按行分割文本
+            const lines = text.split('\n');
+            
+            lines.forEach((line, lineIndex) => {
+                // 更新计数描述匹配模式，支持阿拉伯数字
+                const countDescPattern = new RegExp(`(${countPattern})单(?:(?:${countPattern})组)?|(${countPattern})组`);
+                const countMatch = line.match(countDescPattern);
+                
+                if (countMatch) {
+                    const countDesc = countMatch[0];
+                    const countStart = countMatch.index;
+                    
+                    // 添加计数描述到高亮列表
+                    const absoluteCountStart = line.indexOf(countDesc);
+                    highlights.push({
+                        start: absoluteCountStart,
+                        end: absoluteCountStart + countDesc.length,
+                        text: countDesc,
+                        type: 'count',
+                        line: line
+                    });
+                    
+                    // 获取从行首到计数描述之前的文本
+                    const beforeText = line.substring(0, countStart);
+                    
+                    // 查找所有三位数字，支持更多分隔符
+                    const numbers = [...beforeText.matchAll(/\d{3}/g)];
+                    numbers.forEach(numMatch => {
+                        const numStart = numMatch.index;
+                        const beforeChar = numStart > 0 ? beforeText[numStart - 1] : '';
+                        const afterChar = beforeText[numStart + 3] || '';
+                        
+                        // 更新分隔符检查，添加+号
+                        if ((!beforeChar || /[，,\s.、+]/.test(beforeChar)) && 
+                            (!afterChar || /[，,\s.、+]/.test(afterChar))) {
+                            highlights.push({
+                                start: numStart,
+                                end: numStart + 3,
+                                text: numMatch[0],
+                                type: 'number',
+                                line: line
+                            });
+                        }
+                    });
+                }
+            });
+
+            // 处理每一行
+            let result = [];
+            lines.forEach(line => {
+                const lineHighlights = highlights.filter(h => h.line === line)
+                                              .sort((a, b) => a.start - b.start);
+                
+                let processedLine = line;
+                for (let i = lineHighlights.length - 1; i >= 0; i--) {
+                    const h = lineHighlights[i];
+                    const before = processedLine.substring(0, h.start);
+                    const after = processedLine.substring(h.end);
+                    const highlightClass = h.type === 'number' ? 'highlight-number' : 'highlight-count';
+                    processedLine = before + `<span class="${highlightClass}">${h.text}</span>` + after;
+                }
+                result.push(processedLine);
+            });
+
+            return result.join('\n');
+        }
+
+        function updateStatistics() {
+            // 使用 Map 来保持插入顺序
+            const numbers = new Map();
+            
+            // 获取完整的HTML内容并正确分割行
+            const lines = highlightedText.innerHTML
+                .split(/<br\s*\/?>/i)
+                .filter(line => line.trim());
+            
+            // 处理每一行
+            lines.forEach((line, index) => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = line.trim();
+                
+                // 获取这一行的所有数字和计数
+                const numberSpans = tempDiv.querySelectorAll('.highlight-number');
+                const countSpan = tempDiv.querySelector('.highlight-count');
+                
+                if (!countSpan || !numberSpans.length) return;
+                
+                // 获取计数文本
+                const countText = countSpan.textContent;
+                
+                // 解析单数和组数
+                let singleCount = 0;
+                let groupCount = 0;
+                
+                // 匹配单数
+                const singleMatch = countText.match(new RegExp(`(${numberPattern}|\\d+)单`));
+                if (singleMatch) {
+                    const count = singleMatch[1];
+                    singleCount = chineseNumbers[count] || parseInt(count);
+                }
+                
+                // 匹配组数
+                const groupMatch = countText.match(new RegExp(`(${numberPattern}|\\d+)组`));
+                if (groupMatch) {
+                    const count = groupMatch[1];
+                    groupCount = chineseNumbers[count] || parseInt(count);
+                }
+                
+                // 获取这一行的数字并累加计数
+                Array.from(numberSpans).forEach(span => {
+                    const num = span.textContent;
+                    if (!numbers.has(num)) {
+                        // 第一次出现时初始化
+                        numbers.set(num, {
+                            single: singleCount,
+                            group: groupCount
+                        });
+                    } else {
+                        // 已存在时累加单数和组数
+                        const current = numbers.get(num);
+                        numbers.set(num, {
+                            single: current.single + singleCount,
+                            group: current.group + groupCount
+                        });
+                    }
+                });
+            });
+            
+            // 更新结果表格，保持数字出现的原始顺序
+            resultTable.innerHTML = '';
+            numbers.forEach((counts, number) => {
+                const row = resultTable.insertRow();
+                row.insertCell(0).textContent = number;
+                row.insertCell(1).textContent = counts.single;
+                row.insertCell(2).textContent = counts.group;
+            });
+        }
+
+        // 修改输入处理函数，确保正确插入换行符
+        inputText.addEventListener('input', () => {
+            const processed = processText(inputText.value);
+            highlightedText.innerHTML = processed.replace(/\n/g, '<br>');
+            updateStatistics();
+        });
+
+        // 添加清空功能
+        function clearInput() {
+            inputText.value = '';
+            highlightedText.innerHTML = '';
+            resultTable.innerHTML = '';
+        }
+
+        // 添加复制结果功能
+        function copyResults() {
+            let resultText = '';
+            const rows = resultTable.getElementsByTagName('tr');
+            for (let row of rows) {
+                const cells = row.getElementsByTagName('td');
+                resultText += `${cells[0].textContent}\t${cells[1].textContent}\t${cells[2].textContent}\n`;
+            }
+            
+            // 创建临时文本区域
+            const textarea = document.createElement('textarea');
+            textarea.value = resultText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('结果已复制到剪贴板');
+            } catch (err) {
+                alert('复制失败，请手动复制');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+
+        // 自动调整文本框高度
+        inputText.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    </script>
+</body>
+</html> 
