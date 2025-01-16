@@ -198,7 +198,7 @@
             
             const lines = text.split('\n');
             let processed = lines.map(line => {
-                const countDescPattern = new RegExp(`(${fullNumberPattern})单(?:(?:${fullNumberPattern})组)?|(${fullNumberPattern})组`, 'g');
+                const countDescPattern = new RegExp(`(${fullNumberPattern})[单倍直](?:(?:${fullNumberPattern})组)?|(${fullNumberPattern})组`, 'g');
                 return processLine(line, countDescPattern);
             }).join('\n');
             
@@ -224,15 +224,16 @@
                 // 获取这个计数描述之前的文本
                 const textBefore = line.substring(0, countIndex);
                 
-                // 查找所有三位数字
-                const numbers = [...textBefore.matchAll(/\d{3}/g)];
+                // 添加。作为分隔符
+                const numbers = [...textBefore.matchAll(/\d{3}(?=[，,\s.。、+\-]|$)|(?<=[，,\s.。、+\-]|^)\d{3}/g)];
                 numbers.forEach(numMatch => {
                     const numStart = numMatch.index;
                     const beforeChar = numStart > 0 ? textBefore[numStart - 1] : '';
                     const afterChar = textBefore[numStart + 3] || '';
                     
-                    if ((!beforeChar || /[，,\s.、+]/.test(beforeChar)) && 
-                        (!afterChar || /[，,\s.、+]/.test(afterChar))) {
+                    // 在分隔符列表中添加。
+                    if ((!beforeChar || /[，,\s.。、+\-]/.test(beforeChar)) && 
+                        (!afterChar || /[，,\s.。、+\-]/.test(afterChar))) {
                         highlights.push({
                             start: numStart,
                             end: numStart + 3,
@@ -279,7 +280,7 @@
                 let singleCount = 0;
                 let groupCount = 0;
                 
-                const singleMatch = countText.match(new RegExp(`(${fullNumberPattern})单`));
+                const singleMatch = countText.match(new RegExp(`(${fullNumberPattern})[单倍直]`));
                 if (singleMatch) {
                     const count = singleMatch[1];
                     singleCount = chineseNumbers[count] || parseInt(count);
@@ -342,7 +343,6 @@
                 const single = cells[1].textContent;
                 const group = cells[2].textContent;
                 
-                // 格式化输出
                 let line = number;
                 if (single > 0) {
                     line += ` ${single}单`;
@@ -353,7 +353,6 @@
                 resultText += line + '\n';
             }
             
-            // 创建临时文本区域
             const textarea = document.createElement('textarea');
             textarea.value = resultText;
             document.body.appendChild(textarea);
