@@ -264,6 +264,7 @@
                 .split(/<br\s*\/?>/i)
                 .filter(line => line.trim());
             
+            // 收集数据
             lines.forEach((line, index) => {
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = line.trim();
@@ -308,13 +309,42 @@
                     }
                 });
             });
-            
+
+            // 转换为数组并排序
+            const sortedResults = Array.from(numbers.entries())
+                .map(([number, counts]) => ({
+                    number,
+                    single: parseInt(counts.single) || 0,  // 确保是数字
+                    group: parseInt(counts.group) || 0     // 确保是数字
+                }));
+
+            // console.log('Before sorting:', sortedResults);
+
+            // 排序
+            sortedResults.sort((a, b) => {
+                // console.log(`Comparing:`, 
+                    // `\n${a.number}(${a.single}单${a.group}组) vs ${b.number}(${b.single}单${b.group}组)`);
+                
+                // 首先按单数从高到低排序
+                if (a.single !== b.single) {
+                    // console.log(`Different singles: ${b.single} - ${a.single} = ${b.single - a.single}`);
+                    return b.single - a.single;
+                }
+                
+                // 单数相同时，按组数从高到低排序
+                // console.log(`Same singles, comparing groups: ${b.group} - ${a.group} = ${b.group - a.group}`);
+                return b.group - a.group;
+            });
+
+            // console.log('After sorting:', sortedResults);
+
+            // 更新表格
             resultTable.innerHTML = '';
-            numbers.forEach((counts, number) => {
+            sortedResults.forEach(result => {
                 const row = resultTable.insertRow();
-                row.insertCell(0).textContent = number;
-                row.insertCell(1).textContent = counts.single;
-                row.insertCell(2).textContent = counts.group;
+                row.insertCell(0).textContent = result.number;
+                row.insertCell(1).textContent = result.single;
+                row.insertCell(2).textContent = result.group;
             });
         }
 
@@ -332,26 +362,26 @@
             resultTable.innerHTML = '';
         }
 
-        // 修改复制结果功能
+        // 修改复制结果功能以使用相同的排序
         function copyResults() {
-            let resultText = '';
             const rows = resultTable.getElementsByTagName('tr');
+            let resultText = '';
             
-            for (let row of rows) {
+            Array.from(rows).forEach(row => {
                 const cells = row.getElementsByTagName('td');
                 const number = cells[0].textContent;
                 const single = cells[1].textContent;
                 const group = cells[2].textContent;
                 
                 let line = number;
-                if (single > 0) {
+                if (parseInt(single) > 0) {
                     line += ` ${single}单`;
                 }
-                if (group > 0) {
+                if (parseInt(group) > 0) {
                     line += `${group}组`;
                 }
                 resultText += line + '\n';
-            }
+            });
             
             const textarea = document.createElement('textarea');
             textarea.value = resultText;
