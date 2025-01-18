@@ -69,6 +69,25 @@
             text-align: center;
         }
 
+        /* 添加说明列的样式 */
+        td.note-cell {
+            text-align: left;
+            padding: 4px;
+        }
+
+        .note-input {
+            width: 100%;
+            padding: 4px;
+            border: none;
+            background: transparent;
+            font-size: inherit;
+        }
+
+        .note-input:focus {
+            outline: 2px solid #4CAF50;
+            background: white;
+        }
+
         th {
             background-color: #f5f5f5;
         }
@@ -126,6 +145,27 @@
             font-size: 14px;
             line-height: 1.4;
         }
+
+        /* 添加变化值设置区域的样式 */
+        .adjustment-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .adjustment-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .adjustment-input {
+            width: 60px;
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -136,7 +176,21 @@
                 <li>在输入框中输入需要统计的数字和计数（如：489，357九单一组28）</li>
                 <li>支持1-100的中文数字和阿拉伯数字</li>
                 <li>支持逗号、空格、点、加号分隔数字</li>
+                <li>可设置单数和组数的变化值（正数为增加，负数为减少）</li>
+                <li>可为每个数字添加说明，说明内容会自动保存</li>
             </ul>
+        </div>
+        
+        <!-- 添加变化值设置区域 -->
+        <div class="adjustment-container">
+            <div class="adjustment-field">
+                <label>单数变化值:</label>
+                <input type="number" id="singleAdjustment" class="adjustment-input" value="0">
+            </div>
+            <div class="adjustment-field">
+                <label>组数变化值:</label>
+                <input type="number" id="groupAdjustment" class="adjustment-input" value="0">
+            </div>
         </div>
         
         <textarea id="inputText" placeholder="请在此输入文本..."></textarea>
@@ -153,6 +207,7 @@
                     <th>数字</th>
                     <th>单数</th>
                     <th>组数</th>
+                    <th>说明</th>
                 </tr>
             </thead>
             <tbody id="resultTable">
@@ -264,6 +319,10 @@
                 .split(/<br\s*\/?>/i)
                 .filter(line => line.trim());
             
+            // 获取变化值
+            const singleAdjustment = parseInt(document.getElementById('singleAdjustment').value) || 0;
+            const groupAdjustment = parseInt(document.getElementById('groupAdjustment').value) || 0;
+            
             // 收集数据
             lines.forEach((line, index) => {
                 const tempDiv = document.createElement('div');
@@ -343,42 +402,92 @@
             sortedResults.forEach(result => {
                 const row = resultTable.insertRow();
                 row.insertCell(0).textContent = result.number;
-                row.insertCell(1).textContent = result.single;
-                row.insertCell(2).textContent = result.group;
+                row.insertCell(1).textContent = result.single + singleAdjustment;
+                row.insertCell(2).textContent = result.group + groupAdjustment;
+                
+                // 添加说明列
+                const noteCell = row.insertCell(3);
+                noteCell.className = 'note-cell';
+                const noteInput = document.createElement('input');
+                noteInput.type = 'text';
+                noteInput.className = 'note-input';
+                noteInput.value = localStorage.getItem(`note_${result.number}`) || '';
+                
+                // 保存说明内容
+                noteInput.addEventListener('change', () => {
+                    localStorage.setItem(`note_${result.number}`, noteInput.value);
+                });
+                
+                noteCell.appendChild(noteInput);
             });
         }
+
+        // 修改清空功能
+        function clearInput() {
+            inputText.value = '';
+            highlightedText.innerHTML = '';
+            resultTable.innerHTML = '';
+            // 清空所有存储的说明
+            clearAllNotes();
+        }
+
+        // 添加清空说明的函数
+        function clearAllNotes() {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('note_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        }
+
+        // 添加页面加载时的处理
+        window.addEventListener('load', () => {
+            if (!inputText.value.trim()) {
+                clearAllNotes();
+            }
+            // 如果输入框有内容，则触发一次统计更新
+            if (inputText.value.trim()) {
+                const processed = processText(inputText.value);
+                highlightedText.innerHTML = processed.replace(/\n/g, '<br>');
+                updateStatistics();
+            }
+        });
 
         // 输入事件监听
         inputText.addEventListener('input', () => {
             const processed = processText(inputText.value);
             highlightedText.innerHTML = processed.replace(/\n/g, '<br>');
+            // 只有当输入框为空时才清除说明
+            if (!inputText.value.trim()) {
+                clearAllNotes();
+            }
             updateStatistics();
         });
 
-        // 清空功能
-        function clearInput() {
-            inputText.value = '';
-            highlightedText.innerHTML = '';
-            resultTable.innerHTML = '';
-        }
-
-        // 修改复制结果功能以使用相同的排序
+        // 修改复制结果功能
         function copyResults() {
             const rows = resultTable.getElementsByTagName('tr');
             let resultText = '';
             
             Array.from(rows).forEach(row => {
                 const cells = row.getElementsByTagName('td');
+                if (cells.length === 0) return; // 跳过表头
+                
                 const number = cells[0].textContent;
-                const single = cells[1].textContent;
-                const group = cells[2].textContent;
+                const single = parseInt(cells[1].textContent);
+                const group = parseInt(cells[2].textContent);
+                const note = cells[3].querySelector('input').value;
                 
                 let line = number;
-                if (parseInt(single) > 0) {
+                if (single !== 0) {
                     line += ` ${single}单`;
                 }
-                if (parseInt(group) > 0) {
-                    line += `${group}组`;
+                if (group !== 0) {
+                    line += ` ${group}组`;
+                }
+                if (note) {
+                    line += ` (${note})`;
                 }
                 resultText += line + '\n';
             });
@@ -403,6 +512,10 @@
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
+
+        // 添加变化值输入框的事件监听
+        document.getElementById('singleAdjustment').addEventListener('input', updateStatistics);
+        document.getElementById('groupAdjustment').addEventListener('input', updateStatistics);
     </script>
 </body>
 </html> 
